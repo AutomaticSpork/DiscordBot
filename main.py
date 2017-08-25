@@ -11,7 +11,6 @@ async def api_call(url, args):
     return json.loads(response.text)
 
 async def handle_gateway(url):
-    global environment
     seq = 0 # TODO: Threads may break?
     async def websocket_send(websocket, op, payload):
         await websocket.send(json.dumps({
@@ -19,13 +18,22 @@ async def handle_gateway(url):
             'd': payload
         }))
     async def receive(websocket):
+        global environment
         while True:
-            print(await websocket.recv())
+            data = json.loads(await websocket.recv())
+            if data['op'] == 1 and data['t'] == 'READY':
+                environment['botId'] = data['d']['user']['id']
+            if data['s']:
+                seq = data['s']
+            print(data)
     async def send(websocket, timeout):
         while True:
             await websocket_send(websocket, 1, seq)
             await asyncio.sleep(timeout / 1000)
-    async with websockets.connect(url) as websocket:
+            print('Sending heartbeat ' + str(seq))
+    async with websockets.connect(url + '/?v=6&encoding=json') as websocket:
+        hello = json.loads(await websocket.recv())
+        assert hello['op'] == 10
         await websocket_send(websocket, 2, {
             'token': environment['token'],
             'properties': {
@@ -40,13 +48,10 @@ async def handle_gateway(url):
                 'game': {
                     'name': 'Bitcoin Mining',
                     'type': 0
-                },
-                'status': 'online'
+                }
             }
         })
-        hello = json.loads(await websocket.recv())['d']
-        environment['botId'] = hello['user']['id']
-        done, pending = await asyncio.wait([asyncio.ensure_future(receive(websocket)), asyncio.ensure_future(send(websocket, hello['heartbeat_interval']))], return_when=asyncio.FIRST_COMPLETED)
+        done, pending = await asyncio.wait([asyncio.ensure_future(receive(websocket)), asyncio.ensure_future(send(websocket, hello['d']['heartbeat_interval']))], return_when=asyncio.FIRST_COMPLETED)
         for task in pending:
             task.cancel()
 
