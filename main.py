@@ -43,7 +43,6 @@ async def handle_gateway(url):
             },
             'compress': False,
             'large_threshold': 250,
-            'shard': [1, 10],
             'presence': {
                 'game': {
                     'name': 'Bitcoin Mining',
