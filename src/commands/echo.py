@@ -1,4 +1,6 @@
-access = 'all'
+from ..util import levels
+
+access = levels.all
 args = [ 'text+' ]
 text = 'Echoes a message'
 
