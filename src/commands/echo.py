@@ -1,10 +1,10 @@
+import argparse
 from .. import api
-from ..util import levels
+from .. import util
 
-access = levels.all
-args = [ 'text+' ]
-text = 'Echoes a message'
+access = util.levels.all
+args = util.BotArgs(description='Echoes a message', prog='echo')
+args.add_argument('text', type=str)
 
 async def run(args, user, channel, commands, environment):
-    #print(' '.join(args['text']))
-    await api.send_message(args['text'], channel)
+    await api.send_message(args.text, channel)

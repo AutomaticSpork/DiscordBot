@@ -43,20 +43,14 @@ async def on_message(message):
         commandstr = message['content'][len(environment['commandStart']):]
         for name, command in commands.items():
             if commandstr.startswith(name) and await check_access(command, message['user']):
-                parsedargs = commandstr[len(name) + 1:].split(' ')
-                args = {} 
-                correct = True
-                for index, item in enumerate(parsedargs):
-                    if index == len(command.args) - 1 and command.args[index].endswith('+'):
-                        args[arg_string(command.args[index])] = ' '.join(parsedargs[index:])
-                        break
-                    if index > len(command.args) - 1:
-                        correct = False
-                        break
-                    # TODO: Proper optional support
-                    args[arg_string(command.args[index])] = item
-                if not correct:
-                    await api.send_message('Invalid args for command %s, expected: `%s`' % (name, '`, `'.join(command.args)), message['channel'])
+                async def arg_print(m):
+                    await api.send_message('```' + m + '```', message['channel'])
+                commandstr = commandstr[len(name) + 1:].split(' ')
+                command.args.on_print = arg_print
+                try:
+                    args = command.args.parse_args(commandstr)
+                except:
+                    await api.send_message('**Invalid args for command ' + name + '**', message['channel'])
                     return
                 await command.run(args, message['user'], message['channel'], commands, environment)
                 break
