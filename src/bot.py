@@ -40,8 +40,8 @@ async def on_message(message):
             if commandstr.startswith(name) and await check_access(command, message['user']):
                 parsedargs = commandstr[len(name) + 1:].split(' ')
                 if len(parsedargs) < len(command.args):
-                    await send_message('Invalid args for command %s, expected: %s' % (name, command.args), message['channel'])
+                    await send_message('Invalid args for command %s, expected: %s' % (name, command.args), message['channel'], environment)
                     return
                 args = { (x[:-1] if (x.endswith('?') or x.endswith('+')) else x): parsedargs[i] for i, x in enumerate(command.args) }
-                await command.run(args, message['user'], commands, environment)
+                await command.run(args, message['user'], message['channel'], commands, environment)
                 break

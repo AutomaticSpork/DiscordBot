@@ -40,7 +40,7 @@ async def websocket_send(websocket, op, payload):
 
 async def run():
     await bot.on_init()
-    gateway = await api.api_call('gateway', None)
+    gateway = await api.api_call('gateway', 'get', None, None)
     async with websockets.connect(gateway['url'] + '/?v=6&encoding=json') as websocket:
         hello = json.loads(await websocket.recv())
         assert hello['op'] == 10
