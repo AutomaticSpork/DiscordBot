@@ -56,7 +56,7 @@ async def on_message(message):
                     # TODO: Proper optional support
                     args[arg_string(command.args[index])] = item
                 if not correct:
-                    await api.send_message('Invalid args for command %s, expected: %s' % (name, ', '.join(command.args)), message['channel'])
+                    await api.send_message('Invalid args for command %s, expected: `%s`' % (name, '`, `'.join(command.args)), message['channel'])
                     return
                 await command.run(args, message['user'], message['channel'], commands, environment)
                 break
