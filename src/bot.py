@@ -50,7 +50,7 @@ async def on_message(message):
                 try:
                     args = command.args.parse_args(commandstr)
                 except:
-                    await api.send_message('**Invalid args for command ' + name + '**', message['channel'])
+                    # await api.send_message('**Invalid args for command ' + name + '**', message['channel'])
                     return
                 await command.run(args, message['user'], message['channel'], commands, environment)
                 break
