@@ -1,8 +1,9 @@
 import asyncio
 import importlib
-from os import path
+import shlex
 import json
 import glob
+from os import path
 from . import util
 from . import api
 
@@ -31,7 +32,8 @@ async def on_init():
     global commands, tasks, environment
     with open('secret.json') as secret:
         environment = json.loads(secret.read())
-    commands = await import_dir('commands')
+    command_dict = await import_dir('commands')
+    commands = { v.args.prog: v for k, v in command_dict.items() }
     tasks = await import_dir('tasks')
     await api.on_init(environment['token'])
 
@@ -43,14 +45,16 @@ async def on_message(message):
         commandstr = message['content'][len(environment['commandStart']):]
         for name, command in commands.items():
             if commandstr.startswith(name) and await check_access(command, message['user']):
-                async def arg_print(m):
+                async def print_callback(m):
                     await api.send_message('```' + m + '```', message['channel'])
-                commandstr = commandstr[len(name) + 1:].split(' ')
-                command.args.on_print = arg_print
+                parsedargs = shlex.split(commandstr[len(name) + 1:])
+                command.args.on_print = print_callback
                 try:
-                    args = command.args.parse_args(commandstr)
+                    args = command.args.parse_args(parsedargs)
                 except:
-                    # await api.send_message('**Invalid args for command ' + name + '**', message['channel'])
+                    # Printing is handled by the callback
+                    command.args.on_print = None
                     return
                 await command.run(args, message['user'], message['channel'], commands, environment)
+                command.args.on_print = None
                 break
