@@ -1,8 +1,6 @@
 import asyncio
-import aiohttp
 import websockets
 import json
-import requests
 from . import bot
 from . import api
 
@@ -40,7 +38,7 @@ async def websocket_send(websocket, op, payload):
 
 async def run():
     await bot.on_init()
-    gateway = await api.api_call('gateway', 'get', None, None)
+    gateway = await api.api_call('get', 'gateway')
     async with websockets.connect(gateway['url'] + '/?v=6&encoding=json') as websocket:
         hello = json.loads(await websocket.recv())
         assert hello['op'] == 10

@@ -7,4 +7,4 @@ text = 'Echoes a message'
 
 async def run(args, user, channel, commands, environment):
     #print(' '.join(args['text']))
-    await api.send_message(args['text'], channel, environment)
+    await api.send_message(args['text'], channel)

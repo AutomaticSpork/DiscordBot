@@ -4,6 +4,7 @@ from os import path
 import json
 import glob
 from . import util
+from . import api
 
 commands = []
 tasks = []
@@ -23,12 +24,16 @@ async def task_loop():
 async def check_access(command, user):
     return True
 
+def arg_string(arg):
+    return arg[:-1] if (arg.endswith('?') or arg.endswith('+')) else arg
+
 async def on_init():
     global commands, tasks, environment
     with open('secret.json') as secret:
         environment = json.loads(secret.read())
     commands = await import_dir('commands')
     tasks = await import_dir('tasks')
+    await api.on_init(environment['token'])
 
 async def on_connect():
     await util.log('Connected!')
@@ -39,9 +44,19 @@ async def on_message(message):
         for name, command in commands.items():
             if commandstr.startswith(name) and await check_access(command, message['user']):
                 parsedargs = commandstr[len(name) + 1:].split(' ')
-                if len(parsedargs) < len(command.args):
-                    await send_message('Invalid args for command %s, expected: %s' % (name, command.args), message['channel'], environment)
+                args = {} 
+                correct = True
+                for index, item in enumerate(parsedargs):
+                    if index == len(command.args) - 1 and command.args[index].endswith('+'):
+                        args[arg_string(command.args[index])] = ' '.join(parsedargs[index:])
+                        break
+                    if index > len(command.args) - 1:
+                        correct = False
+                        break
+                    # TODO: Proper optional support
+                    args[arg_string(command.args[index])] = item
+                if not correct:
+                    await api.send_message('Invalid args for command %s, expected: %s' % (name, ', '.join(command.args)), message['channel'])
                     return
-                args = { (x[:-1] if (x.endswith('?') or x.endswith('+')) else x): parsedargs[i] for i, x in enumerate(command.args) }
                 await command.run(args, message['user'], message['channel'], commands, environment)
                 break
