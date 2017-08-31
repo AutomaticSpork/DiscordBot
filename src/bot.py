@@ -22,7 +22,6 @@ async def import_dir(dir):
 async def task_loop():
     while True:
         for name, task in tasks.items():
-            print(name)
             await task.run(commands, environment)
         await asyncio.sleep(60*60)
 
