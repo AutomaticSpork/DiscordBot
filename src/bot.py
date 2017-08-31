@@ -48,7 +48,11 @@ async def on_message(message):
         commandstr = message['content'][len(environment['commandStart']):]
         for name, command in commands.items():
             if commandstr.startswith(name) and await check_access(command, message['user']):
-                parsedargs = shlex.split(commandstr[len(name) + 1:])
+                try:
+                    parsedargs = shlex.split(commandstr[len(name) + 1:])
+                except ValueError:
+                    await api.send_message('```error: Malformed command string```', message['channel'])
+                    return
                 with util.CommandContext(command, message['channel']):
                     try:
                         args = command.parse_args(parsedargs)
