@@ -55,7 +55,7 @@ async def _run(args, user, channel, commands, environment):
 
 command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
 group = command.add_mutually_exclusive_group()
-group.add_argument('--add-channel', action='store_true')
-group.add_argument('--remove-channel', action='store_true')
-group.add_argument('-s', metavar='searchterm', dest='searchterm', type=str, required=False)
-group.add_argument('-n', metavar='number', dest='number', type=int, required=False)
+group.add_argument('-a', '--add-channel', help='subscribe channel to automatic XKCD', action='store_true')
+group.add_argument('-r', '--remove-channel', help='unsubscribe channel from automatic XKCD', action='store_true')
+group.add_argument('-s', '--search', metavar='searchterm', dest='searchterm', help='access comic by keyword', type=str, required=False)
+group.add_argument('-n', '--number', metavar='number', dest='number', help='access comic by number', type=int, required=False)

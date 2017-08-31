@@ -13,4 +13,4 @@ async def _run(args, user, channel, commands, environment):
         await api.send_message('\n'.join(['**%s%s**: %s' % (environment['commandStart'], k, v.description) for k, v in commands.items()]), channel)
 
 command = util.Command('help', 'Lists commands', util.levels.all, _run)
-command.add_argument('-v', dest='verbose', action='store_true')
+command.add_argument('-v', '--verbose', dest='verbose', help='display verbose help', action='store_true')
