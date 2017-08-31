@@ -7,9 +7,8 @@ async def _run(args, user, channel, commands, environment):
         await api.send_message('```' + m + '```', channel)
     if args.verbose:
         for _, command in commands.items():
-            command.on_print = print_callback
-            command.print_help()
-            command.on_print = None
+            with util.CommandContext(command, channel):
+                command.print_help()
     else:
         await api.send_message('\n'.join(['**%s%s**: %s' % (environment['commandStart'], k, v.description) for k, v in commands.items()]), channel)
 

@@ -7,10 +7,22 @@ from .. import util
 
 async def _run(args, user, channel, commands, environment):
     url = ''
-    if args.channel_add:
-        await api.send_message('This isn\'t implemented yet (add) :(', channel)
-    elif args.channel_remove:
-        await api.send_message('This isn\'t implemented yet (remove) :(', channel)
+    if args.add_channel:
+        channels = await util.get_data('xkcdChannels')
+        if channel in channels:
+            await api.send_message('Already subscribed!', channel)
+        else:
+            channels.append(channel)
+            await util.set_data('xkcdChannels', channels)
+            await api.send_message('Subscribing channel!', channel)
+    elif args.remove_channel:
+        channels = await util.get_data('xkcdChannels')
+        if channel in channels:
+            channels.remove(channel)
+            await util.set_data('xkcdChannels', channels)
+            await api.send_message('Unsubscribing channel!', channel)
+        else:
+            await api.send_message('Not subscribed', channel)
     else:
         if args.searchterm:
             query = 'https://www.googleapis.com/customsearch/v1?q=%s&key=%s&cx=%s' % (urllib.parse.quote('xkcd ' + args.searchterm), urllib.parse.quote(environment["googleKey"]), urllib.parse.quote(environment["googleCustom"]))
@@ -39,7 +51,7 @@ async def _run(args, user, channel, commands, environment):
 
 command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
 group = command.add_mutually_exclusive_group()
-group.add_argument('--channel-add', action='store_true')
-group.add_argument('--channel-remove', action='store_true')
+group.add_argument('--add-channel', action='store_true')
+group.add_argument('--remove-channel', action='store_true')
 group.add_argument('-s', metavar='searchterm', dest='searchterm', type=str, required=False)
 group.add_argument('-n', metavar='number', dest='number', type=int, required=False)

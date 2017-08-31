@@ -19,8 +19,6 @@ async def websocket_receive_loop(websocket):
                 'embeds': data['d']['embeds'],
                 'timestamp': data['d']['timestamp']
             }))
-        if data['op'] == 1 and data['t'] == 'READY':
-            bot.set_environment('botId', data['d']['user']['id'])
         if data['s']:
             seq = data['s']
 
@@ -59,6 +57,10 @@ async def run():
             }
         })
         await bot.on_connect()
-        done, pending = await asyncio.wait([asyncio.ensure_future(websocket_receive_loop(websocket)), asyncio.ensure_future(websocket_send_loop(websocket, hello['d']['heartbeat_interval']))], return_when=asyncio.FIRST_COMPLETED)
+        done, pending = await asyncio.wait([
+            asyncio.ensure_future(websocket_receive_loop(websocket)), 
+            asyncio.ensure_future(websocket_send_loop(websocket, hello['d']['heartbeat_interval'])),
+            asyncio.ensure_future(bot.task_loop())
+        ], return_when=asyncio.FIRST_COMPLETED)
         for task in pending:
             task.cancel()

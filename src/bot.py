@@ -20,9 +20,15 @@ async def import_dir(dir):
     return { x: importlib.import_module('.' + dir + '.' + x, __name__[:__name__.rfind('.')]) for x in items }
 
 async def task_loop():
-    pass
+    while True:
+        for name, task in tasks.items():
+            print(name)
+            await task.run(commands, environment)
+        await asyncio.sleep(60*60)
 
 async def check_access(command, user):
+    if user == environment['botId']:
+        return False
     return True
 
 async def on_init():
@@ -31,7 +37,8 @@ async def on_init():
         environment = json.loads(secret.read())
     command_dict = await import_dir('commands')
     commands = { v.command.prog: v.command for _, v in command_dict.items() }
-    tasks = await import_dir('tasks')
+    task_dict = await import_dir('tasks')
+    tasks = { v.task.name: v.task for _, v in task_dict.items() }
     await api.on_init(environment['token'])
 
 async def on_connect():
@@ -42,16 +49,12 @@ async def on_message(message):
         commandstr = message['content'][len(environment['commandStart']):]
         for name, command in commands.items():
             if commandstr.startswith(name) and await check_access(command, message['user']):
-                async def print_callback(m):
-                    await api.send_message('```' + m + '```', message['channel'])
                 parsedargs = shlex.split(commandstr[len(name) + 1:])
-                command.on_print = print_callback
-                try:
-                    args = command.parse_args(parsedargs)
-                except:
-                    # Printing is handled by the callback
-                    command.on_print = None
-                    return
-                await command.run(args, message['user'], message['channel'], commands, environment)
-                command.on_print = None
+                with util.CommandContext(command, message['channel']):
+                    try:
+                        args = command.parse_args(parsedargs)
+                    except:
+                        # Printing is handled by the callback
+                        return
+                    await command.run(args, message['user'], message['channel'], commands, environment)
                 break
