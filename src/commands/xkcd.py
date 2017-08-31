@@ -26,11 +26,15 @@ async def _run(args, user, channel, commands, environment):
     else:
         if args.searchterm:
             query = 'https://www.googleapis.com/customsearch/v1?q=%s&key=%s&cx=%s' % (urllib.parse.quote('xkcd ' + args.searchterm), urllib.parse.quote(environment["googleKey"]), urllib.parse.quote(environment["googleCustom"]))
-            items = json.loads(await api.web_call('get', query))['items']
+            response = json.loads(await api.web_call('get', query))
+            if 'items' not in response:
+                await api.send_message('**No results**', channel)
+                return
+            items = response['items']
             pattern = re.compile('^http(s)?:\/\/xkcd\.com')
             matched = [x['link'] for x in items if pattern.match(x['link'])]
             if len(matched) == 0:
-                await api.send_message('**No matching comics**')
+                await api.send_message('**No matching comics**', channel)
                 return
             else:
                 url = pattern.sub('', matched[0])
