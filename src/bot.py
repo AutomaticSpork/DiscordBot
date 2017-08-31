@@ -25,15 +25,12 @@ async def task_loop():
 async def check_access(command, user):
     return True
 
-def arg_string(arg):
-    return arg[:-1] if (arg.endswith('?') or arg.endswith('+')) else arg
-
 async def on_init():
     global commands, tasks, environment
     with open('secret.json') as secret:
         environment = json.loads(secret.read())
     command_dict = await import_dir('commands')
-    commands = { v.args.prog: v for k, v in command_dict.items() }
+    commands = { v.command.prog: v.command for _, v in command_dict.items() }
     tasks = await import_dir('tasks')
     await api.on_init(environment['token'])
 
@@ -48,13 +45,13 @@ async def on_message(message):
                 async def print_callback(m):
                     await api.send_message('```' + m + '```', message['channel'])
                 parsedargs = shlex.split(commandstr[len(name) + 1:])
-                command.args.on_print = print_callback
+                command.on_print = print_callback
                 try:
-                    args = command.args.parse_args(parsedargs)
+                    args = command.parse_args(parsedargs)
                 except:
                     # Printing is handled by the callback
-                    command.args.on_print = None
+                    command.on_print = None
                     return
                 await command.run(args, message['user'], message['channel'], commands, environment)
-                command.args.on_print = None
+                command.on_print = None
                 break

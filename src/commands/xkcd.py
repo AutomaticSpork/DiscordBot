@@ -5,15 +5,7 @@ import urllib.parse
 from .. import api
 from .. import util
 
-access = util.levels.all
-args = util.BotArgs(description='XKCD!', prog='xkcd')
-group = args.add_mutually_exclusive_group()
-group.add_argument('--channel-add', action='store_true')
-group.add_argument('--channel-remove', action='store_true')
-group.add_argument('-s', metavar='searchterm', dest='searchterm', type=str, required=False)
-group.add_argument('-n', metavar='number', dest='number', type=int, required=False)
-
-async def run(args, user, channel, commands, environment):
+async def _run(args, user, channel, commands, environment):
     url = ''
     if args.channel_add:
         await api.send_message('This isn\'t implemented yet (add) :(', channel)
@@ -44,3 +36,10 @@ async def run(args, user, channel, commands, environment):
                 'text': response['alt']
             }
         })
+
+command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
+group = command.add_mutually_exclusive_group()
+group.add_argument('--channel-add', action='store_true')
+group.add_argument('--channel-remove', action='store_true')
+group.add_argument('-s', metavar='searchterm', dest='searchterm', type=str, required=False)
+group.add_argument('-n', metavar='number', dest='number', type=int, required=False)
