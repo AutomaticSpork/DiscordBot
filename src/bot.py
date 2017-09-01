@@ -26,7 +26,9 @@ async def task_loop():
         await asyncio.sleep(60*60)
 
 async def check_access(command, user):
-    if user == environment['botId']:
+    if (user == environment['botId']) \
+    or (command.access == util.levels.owner and user != environment['ownerId']) \
+    or (command.access == util.levels.none):
         return False
     return True
 
@@ -47,13 +49,16 @@ async def on_message(message):
     if message['content'].startswith(environment['commandStart']):
         commandstr = message['content'][len(environment['commandStart']):]
         for name, command in commands.items():
-            if commandstr.startswith(name) and await check_access(command, message['user']):
+            if commandstr.startswith(name):
+                if not await check_access(command, message['user']):
+                    command.channel = message['channel']
+                    command.error('unauthorized')
+                    return
                 try:
                     parsedargs = shlex.split(commandstr[len(name) + 1:])
                 except ValueError:
-                    command.is_error = True
                     command.channel = message['channel']
-                    command._print_message(name + ': error: malformed command string')
+                    command.error('malformed command string')
                     return
                 with util.CommandContext(command, message['channel']):
                     try:
