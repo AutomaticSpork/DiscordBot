@@ -51,12 +51,14 @@ async def on_message(message):
                 try:
                     parsedargs = shlex.split(commandstr[len(name) + 1:])
                 except ValueError:
-                    await api.send_message('```error: Malformed command string```', message['channel'])
+                    command.is_error = True
+                    command.channel = message['channel']
+                    command._print_message(name + ': error: malformed command string')
                     return
                 with util.CommandContext(command, message['channel']):
                     try:
                         args = command.parse_args(parsedargs)
-                    except:
+                    except ValueError:
                         # Printing is handled by the callback
                         return
                     await command.run(args, message['user'], message['channel'], commands, environment)
