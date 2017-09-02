@@ -1,5 +1,6 @@
 import re
 import json
+import random
 import argparse
 import urllib.parse
 from .. import api
@@ -24,7 +25,11 @@ async def _run(args, user, channel, commands, environment):
         else:
             await api.send_message('Not subscribed', channel)
     else:
-        if args.searchterm:
+        if args.random:
+            response = json.loads(await api.web_call('get', 'http://xkcd.com/info.0.json'))
+            max = response['num']
+            url = str(random.randrange(1, max))
+        elif args.searchterm:
             query = 'https://www.googleapis.com/customsearch/v1?q=%s&key=%s&cx=%s' % (urllib.parse.quote('xkcd ' + args.searchterm), urllib.parse.quote(environment["googleKey"]), urllib.parse.quote(environment["googleCustom"]))
             response = json.loads(await api.web_call('get', query))
             if 'items' not in response:
@@ -45,6 +50,7 @@ async def _run(args, user, channel, commands, environment):
         response = json.loads(await api.web_call('get', 'http://xkcd.com/' + url + '/info.0.json'))
         await api.send_message('', channel, {
             'title': response['title'] + ' #' + str(response['num']),
+            'url': 'http://xkcd.com/' + url,
             'image': {
                 'url': response['img']
             },
@@ -55,7 +61,8 @@ async def _run(args, user, channel, commands, environment):
 
 command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
 group = command.add_mutually_exclusive_group()
-group.add_argument('-a', '--add-channel', help='subscribe channel to automatic XKCD', action='store_true')
-group.add_argument('-r', '--remove-channel', help='unsubscribe channel from automatic XKCD', action='store_true')
+group.add_argument('--add-channel', help='subscribe channel to automatic XKCD', action='store_true')
+group.add_argument('--remove-channel', help='unsubscribe channel from automatic XKCD', action='store_true')
 group.add_argument('-s', '--search', metavar='searchterm', dest='searchterm', help='access comic by keyword', type=str, required=False)
 group.add_argument('-n', '--number', metavar='number', dest='number', help='access comic by number', type=int, required=False)
+group.add_argument('-r', '--random', dest='random', help='display a random comic', action='store_true', required=False)
