@@ -57,7 +57,7 @@ async def run():
                 'large_threshold': 250,
                 'presence': {
                     'game': {
-                        'name': 'Bitcoin Mining',
+                        'name': bot.environment['game'],
                         'type': 0
                     }
                 }
