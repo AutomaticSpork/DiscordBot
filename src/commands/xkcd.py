@@ -25,12 +25,9 @@ async def _run(args, user, channel, commands, environment):
         else:
             await api.send_message('Not subscribed', channel)
     else:
-        if args.random:
-            response = json.loads(await api.web_call('get', 'http://xkcd.com/info.0.json'))
-            max = response['num']
-            url = str(random.randrange(1, max))
-        elif args.searchterm:
-            query = 'https://www.googleapis.com/customsearch/v1?q=%s&key=%s&cx=%s' % (urllib.parse.quote('xkcd ' + args.searchterm), urllib.parse.quote(environment["googleKey"]), urllib.parse.quote(environment["googleCustom"]))
+        if args.searchterm:
+            term = ' '.join(args.searchterm)
+            query = 'https://www.googleapis.com/customsearch/v1?q=%s&key=%s&cx=%s' % (urllib.parse.quote('xkcd ' + term), urllib.parse.quote(environment["googleKey"]), urllib.parse.quote(environment["googleCustom"]))
             response = json.loads(await api.web_call('get', query))
             if 'items' not in response:
                 await api.send_message('**No results**', channel)
@@ -44,7 +41,16 @@ async def _run(args, user, channel, commands, environment):
             else:
                 url = pattern.sub('', matched[0])
         elif args.number:
-            url = str(args.number)
+            if args.number > 0:
+              url = str(args.number)
+            else:
+              response = json.loads(await api.web_call('get', 'http://xkcd.com/info.0.json'))
+              url = str(int(response['num']) + args.number)
+              print(url)
+        elif args.random:
+            response = json.loads(await api.web_call('get', 'http://xkcd.com/info.0.json'))
+            max = response['num']
+            url = str(random.randrange(1, max))
         else:
             url = ''
         response = json.loads(await api.web_call('get', 'http://xkcd.com/' + url + '/info.0.json'))
@@ -60,9 +66,9 @@ async def _run(args, user, channel, commands, environment):
         })
 
 command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
+command.add_argument('searchterm', metavar='TERM', nargs='*', help='access comic by keyword', type=str)
 group = command.add_mutually_exclusive_group()
 group.add_argument('--add-channel', help='subscribe channel to automatic XKCD', action='store_true')
 group.add_argument('--remove-channel', help='unsubscribe channel from automatic XKCD', action='store_true')
-group.add_argument('-s', '--search', metavar='searchterm', dest='searchterm', help='access comic by keyword', type=str, required=False)
 group.add_argument('-n', '--number', metavar='number', dest='number', help='access comic by number', type=int, required=False)
 group.add_argument('-r', '--random', dest='random', help='display a random comic', action='store_true', required=False)
