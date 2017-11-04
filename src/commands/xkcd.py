@@ -59,11 +59,9 @@ async def _run(args, user, channel, commands, environment):
             'url': 'http://xkcd.com/' + url,
             'image': {
                 'url': response['img']
-            },
-            'footer': {
-                'text': response['alt']
             }
         })
+        await api.send_message('*' + response['alt'] + '*', channel)
 
 command = util.Command('xkcd', 'XKCD!', util.levels.all, _run)
 command.add_argument('searchterm', metavar='TERM', nargs='*', help='access comic by keyword', type=str)
